@@ -3,4 +3,5 @@ body {
 	background-color: gray;
 	display: grid;
 	place-content: center;
+	overflow: hidden;
 }
