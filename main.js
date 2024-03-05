@@ -8,6 +8,12 @@ const LINE_WIDTH = 2 // Width of the ship draw
 const ROTATION_SPEED = 360 // Ship rotation speed in degrees per second
 const SHIP_THRUST = 3 // Acceleration of the ship in pixels per second per second
 const FRICTION = 1.4 // 0 = no friction
+const ASTEROIDS_NUM = 3 // Starting number of asteroids
+const ASTEROIDS_VERT = 10 // Average number of vertices on the asteroids
+const ASTEROID_INFO = {
+	speed: 50, // Max starting speed
+	size: 100, // Starting size of asteroids in px
+}
 
 // Constants to correct the pixels
 const PIXEL_RATIO = window.devicePixelRatio || 1
@@ -22,11 +28,11 @@ canvas.style.height = `${CANVAS_HEIGHT}px`
 
 const adjustedLineWidth = LINE_WIDTH * PIXEL_RATIO
 
-let ship = {
-	x: canvas.width / 2,
-	y: canvas.height / 2,
+const ship = {
+	x: canvas.width / 2, // X position
+	y: canvas.height / 2, // Y position
 	r: SHIP_HEIGHT * PIXEL_RATIO, // Adjusted for pixel ratio
-	a: (90 / 180) * Math.PI,
+	a: (90 / 180) * Math.PI, // Angle
 	rot: 0,
 	isThrusting: false,
 	thrust: {
@@ -35,9 +41,43 @@ let ship = {
 	},
 }
 
+let asteroidsArray = []
+createAllAsteroids()
+
 // Event handlers
 document.addEventListener('keydown', handleKeyDown)
 document.addEventListener('keyup', handleKeyUp)
+
+function createAllAsteroids() {
+	asteroidsArray = []
+
+	for (let i = 0; i < ASTEROIDS_NUM; i++) {
+		const xAsteroidPos = Math.floor(Math.random() * CANVAS_WIDTH)
+		const yAsteroidPos = Math.floor(Math.random() * CANVAS_HEIGHT)
+
+		asteroidsArray.push(createNewAsteroid(xAsteroidPos, yAsteroidPos))
+	}
+}
+
+function createNewAsteroid(x, y) {
+	console.log('hello')
+	const newAsteroid = {
+		x: x,
+		y: y,
+		xSpeed:
+			((Math.random() * ASTEROID_INFO.speed) / FRAME_RATE) *
+			(Math.random() < 0.5 ? 1 : -1),
+		ySpeed:
+			((Math.random() * ASTEROID_INFO.speed) / FRAME_RATE) *
+			(Math.random() < 0.5 ? 1 : -1),
+		radius: (ASTEROID_INFO.size / 2) * PIXEL_RATIO,
+		a: Math.random() * Math.PI * 2, // In radians
+		vert: Math.floor(Math.random() * (ASTEROIDS_VERT + 1) + ASTEROIDS_VERT / 2),
+	}
+	console.log(newAsteroid)
+
+	return newAsteroid
+}
 
 /**
  * Handle keydown event
@@ -138,6 +178,23 @@ function update() {
 	)
 	ctx.closePath()
 	ctx.stroke()
+
+	// Draw the asteroids
+	ctx.strokeStyle = 'gray' // TODO Make variables for this
+	ctx.lineWidth = 2 // TODO Make variables for this
+	asteroidsArray.map(({ x, y, xSpeed, ySpeed, radius, a, vert }) => {
+		// Draw the asteroid
+		ctx.beginPath()
+		ctx.moveTo(x + radius * Math.cos(a), y + radius * Math.sin(a))
+		for (let i = 0; i < vert; i++) {
+			ctx.lineTo(
+				x + radius * Math.cos(a + (i * Math.PI * 2) / vert),
+				y + radius * Math.sin(a + (i * Math.PI * 2) / vert)
+			)
+		}
+		ctx.closePath()
+		ctx.stroke()
+	})
 
 	// Rotate the ship
 	ship.a += ship.rot
