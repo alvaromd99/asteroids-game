@@ -50,13 +50,21 @@ document.addEventListener('keyup', handleKeyUp)
 
 function createAllAsteroids() {
 	asteroidsArray = []
-
+	let xAsteroidPos, yAsteroidPos
 	for (let i = 0; i < ASTEROIDS_NUM; i++) {
-		const xAsteroidPos = Math.floor(Math.random() * CANVAS_WIDTH)
-		const yAsteroidPos = Math.floor(Math.random() * CANVAS_HEIGHT)
-
+		do {
+			xAsteroidPos = Math.floor(Math.random() * CANVAS_WIDTH)
+			yAsteroidPos = Math.floor(Math.random() * CANVAS_HEIGHT)
+		} while (
+			distanceBetweenTwoPoints(ship.x, ship.y, xAsteroidPos, yAsteroidPos) <
+			ASTEROID_INFO.size * 2 + ship.r
+		)
 		asteroidsArray.push(createNewAsteroid(xAsteroidPos, yAsteroidPos))
 	}
+}
+
+function distanceBetweenTwoPoints(x1, y1, x2, y2) {
+	return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
 }
 
 function createNewAsteroid(x, y) {
