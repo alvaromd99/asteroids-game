@@ -13,6 +13,7 @@ import {
 	SHIP_HEIGHT,
 	SHIP_THRUST,
 	SHOW_BOUNDING,
+	SHOW_CENTER_DOT,
 } from './constants/constants.js'
 
 const canvas = document.querySelector('canvas')
@@ -251,6 +252,12 @@ function update() {
 		ship.y = 0 - ship.r
 	}
 
+	// centre dot
+	if (SHOW_CENTER_DOT) {
+		ctx.fillStyle = 'red'
+		ctx.fillRect(ship.x - 1, ship.y - 1, 2, 2)
+	}
+
 	// Move the asteroids
 	asteroidsArray = asteroidsArray.map(
 		({ x, y, radius, a, vert, vertOffs, xSpeed, ySpeed }) => {
@@ -274,12 +281,6 @@ function update() {
 			return { x, y, radius, a, vert, vertOffs, xSpeed, ySpeed }
 		}
 	)
-
-	// centre dot
-	if (SHOW_CENTER_DOT) {
-		ctx.fillStyle = 'red'
-		ctx.fillRect(ship.x - 1, ship.y - 1, 2, 2)
-	}
 }
 
 update()
