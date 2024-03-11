@@ -10,6 +10,7 @@ import {
 	FRICTION,
 	LINE_WIDTH,
 	ROTATION_SPEED,
+	SHIP_EXPLOSION_DURATION,
 	SHIP_HEIGHT,
 	SHIP_THRUST,
 	SHOW_BOUNDING,
@@ -35,6 +36,7 @@ const ship = {
 	y: canvas.height / 2, // Y position
 	r: SHIP_HEIGHT * PIXEL_RATIO, // Adjusted for pixel ratio
 	a: (90 / 180) * Math.PI, // Angle
+	explosionTime: 0,
 	rot: 0,
 	isThrusting: false,
 	thrust: {
@@ -95,11 +97,7 @@ function createNewAsteroid(x, y) {
 	return newAsteroid
 }
 
-/**
- * Handle keydown event
- * @param {KeyboardEvent} e
- */
-function handleKeyDown(e) {
+function handleKeyDown(/** @type {KeyboardEvent} */ e) {
 	switch (e.code) {
 		case 'ArrowLeft':
 			ship.rot = (ROTATION_SPEED / FRAME_RATE) * (Math.PI / 180)
@@ -113,11 +111,7 @@ function handleKeyDown(e) {
 	}
 }
 
-/**
- * Handle keyup event
- * @param {KeyboardEvent} e
- */
-function handleKeyUp(e) {
+function handleKeyUp(/** @type {KeyboardEvent} */ e) {
 	switch (e.code) {
 		case 'ArrowLeft':
 			ship.rot = 0
@@ -132,8 +126,14 @@ function handleKeyUp(e) {
 	}
 }
 
+function makeShipExplode() {
+	ship.explosionTime = Math.ceil(SHIP_EXPLOSION_DURATION * FRAME_RATE)
+}
+
 function update() {
 	window.requestAnimationFrame(update)
+
+	const isShipExploding = ship.explosionTime > 0
 
 	// Draw bg (this should be at the Top)
 	ctx.fillStyle = COLORS.canvasColor
@@ -172,28 +172,51 @@ function update() {
 		ship.thrust.y -= (FRICTION * ship.thrust.y) / FRAME_RATE
 	}
 
-	// Draw ship
-	ctx.strokeStyle = COLORS.shipColor
-	ctx.lineWidth = adjustedLineWidth // Adjusted for pixel ratio
+	if (!isShipExploding) {
+		// Draw ship
+		ctx.strokeStyle = COLORS.shipColor
+		ctx.lineWidth = adjustedLineWidth // Adjusted for pixel ratio
 
-	ctx.beginPath()
-	ctx.moveTo(
-		// Top point
-		ship.x + (4 / 3) * ship.r * Math.cos(ship.a),
-		ship.y - (4 / 3) * ship.r * Math.sin(ship.a)
-	)
-	ctx.lineTo(
-		// Rear left
-		ship.x - ship.r * ((2 / 3) * Math.cos(ship.a) + Math.sin(ship.a)),
-		ship.y + ship.r * ((2 / 3) * Math.sin(ship.a) - Math.cos(ship.a))
-	)
-	ctx.lineTo(
-		// Rear right
-		ship.x - ship.r * ((2 / 3) * Math.cos(ship.a) - Math.sin(ship.a)),
-		ship.y + ship.r * ((2 / 3) * Math.sin(ship.a) + Math.cos(ship.a))
-	)
-	ctx.closePath()
-	ctx.stroke()
+		ctx.beginPath()
+		ctx.moveTo(
+			// Top point
+			ship.x + (4 / 3) * ship.r * Math.cos(ship.a),
+			ship.y - (4 / 3) * ship.r * Math.sin(ship.a)
+		)
+		ctx.lineTo(
+			// Rear left
+			ship.x - ship.r * ((2 / 3) * Math.cos(ship.a) + Math.sin(ship.a)),
+			ship.y + ship.r * ((2 / 3) * Math.sin(ship.a) - Math.cos(ship.a))
+		)
+		ctx.lineTo(
+			// Rear right
+			ship.x - ship.r * ((2 / 3) * Math.cos(ship.a) - Math.sin(ship.a)),
+			ship.y + ship.r * ((2 / 3) * Math.sin(ship.a) + Math.cos(ship.a))
+		)
+		ctx.closePath()
+		ctx.stroke()
+	} else {
+		// Draw the explosion
+		ctx.fillStyle = 'red'
+		ctx.beginPath()
+		ctx.arc(ship.x, ship.y, ship.r * 1.5, 0, Math.PI * 2, false)
+		ctx.fill()
+
+		ctx.fillStyle = 'orange'
+		ctx.beginPath()
+		ctx.arc(ship.x, ship.y, ship.r * 1.2, 0, Math.PI * 2, false)
+		ctx.fill()
+
+		ctx.fillStyle = 'yellow'
+		ctx.beginPath()
+		ctx.arc(ship.x, ship.y, ship.r * 0.9, 0, Math.PI * 2, false)
+		ctx.fill()
+
+		ctx.fillStyle = 'white'
+		ctx.beginPath()
+		ctx.arc(ship.x, ship.y, ship.r * 0.6, 0, Math.PI * 2, false)
+		ctx.fill()
+	}
 
 	if (SHOW_BOUNDING) {
 		ctx.strokeStyle = COLORS.impactCircleColor
@@ -232,6 +255,16 @@ function update() {
 		}
 	})
 
+	// Check for collisions
+	asteroidsArray.map((asteroid) => {
+		if (
+			distanceBetweenTwoPoints(ship.x, ship.y, asteroid.x, asteroid.y) <
+			ship.r + asteroid.radius
+		) {
+			makeShipExplode()
+		}
+	})
+
 	// Rotate the ship
 	ship.a += ship.rot
 
@@ -250,12 +283,6 @@ function update() {
 		ship.y = canvas.height + ship.r
 	} else if (ship.y > canvas.height + ship.r) {
 		ship.y = 0 - ship.r
-	}
-
-	// centre dot
-	if (SHOW_CENTER_DOT) {
-		ctx.fillStyle = 'red'
-		ctx.fillRect(ship.x - 1, ship.y - 1, 2, 2)
 	}
 
 	// Move the asteroids
@@ -281,6 +308,12 @@ function update() {
 			return { x, y, radius, a, vert, vertOffs, xSpeed, ySpeed }
 		}
 	)
+
+	// centre dot
+	if (SHOW_CENTER_DOT) {
+		ctx.fillStyle = 'red'
+		ctx.fillRect(ship.x - 1, ship.y - 1, 2, 2)
+	}
 }
 
 update()

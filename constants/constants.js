@@ -7,7 +7,8 @@ export const LINE_WIDTH = 2 // Width of the ship draw
 export const SHIP_HEIGHT = 15
 export const ROTATION_SPEED = 360 // Ship rotation speed in degrees per second
 export const SHIP_THRUST = 5 // Acceleration of the ship in pixels per second per second
-export const FRICTION = 1 // 0 = no friction
+export const FRICTION = 0.4 // 0 = no friction
+export const SHIP_EXPLOSION_DURATION = 0.3 // in seconds
 
 export const ASTEROIDS_NUM = 3 // Starting number of asteroids
 export const ASTEROIDS_VERT = 10 // Average number of vertices on the asteroids
