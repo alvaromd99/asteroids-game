@@ -18,7 +18,7 @@ export const ASTEROID_INFO = {
 	size: 100, // Starting size of asteroids in px
 }
 
-export const SHOW_BOUNDING = true
+export const SHOW_BOUNDING = false
 export const SHOW_CENTER_DOT = false
 
 export const COLORS = {

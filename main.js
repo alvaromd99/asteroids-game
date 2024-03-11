@@ -31,19 +31,7 @@ canvas.style.height = `${CANVAS_HEIGHT}px`
 
 const adjustedLineWidth = LINE_WIDTH * PIXEL_RATIO
 
-const ship = {
-	x: canvas.width / 2, // X position
-	y: canvas.height / 2, // Y position
-	r: SHIP_HEIGHT * PIXEL_RATIO, // Adjusted for pixel ratio
-	a: (90 / 180) * Math.PI, // Angle
-	explosionTime: 0,
-	rot: 0,
-	isThrusting: false,
-	thrust: {
-		x: 0,
-		y: 0,
-	},
-}
+const ship = newShip()
 
 // Asteroids creation
 let asteroidsArray = []
@@ -130,6 +118,22 @@ function makeShipExplode() {
 	ship.explosionTime = Math.ceil(SHIP_EXPLOSION_DURATION * FRAME_RATE)
 }
 
+function newShip() {
+	return {
+		x: canvas.width / 2, // X position
+		y: canvas.height / 2, // Y position
+		r: SHIP_HEIGHT * PIXEL_RATIO, // Adjusted for pixel ratio
+		a: (90 / 180) * Math.PI, // Angle
+		explosionTime: 0,
+		rot: 0,
+		isThrusting: false,
+		thrust: {
+			x: 0,
+			y: 0,
+		},
+	}
+}
+
 function update() {
 	window.requestAnimationFrame(update)
 
@@ -140,7 +144,7 @@ function update() {
 	ctx.fillRect(0, 0, canvas.width, canvas.height)
 
 	// Thrust the ship
-	if (ship.isThrusting) {
+	if (ship.isThrusting && !isShipExploding) {
 		ship.thrust.x += (SHIP_THRUST * Math.cos(ship.a)) / FRAME_RATE
 		ship.thrust.y -= (SHIP_THRUST * Math.sin(ship.a)) / FRAME_RATE
 
@@ -197,24 +201,29 @@ function update() {
 		ctx.stroke()
 	} else {
 		// Draw the explosion
+		ctx.fillStyle = 'darkred'
+		ctx.beginPath()
+		ctx.arc(ship.x, ship.y, ship.r * 1.7, 0, Math.PI * 2, false)
+		ctx.fill()
+
 		ctx.fillStyle = 'red'
 		ctx.beginPath()
-		ctx.arc(ship.x, ship.y, ship.r * 1.5, 0, Math.PI * 2, false)
+		ctx.arc(ship.x, ship.y, ship.r * 1.4, 0, Math.PI * 2, false)
 		ctx.fill()
 
 		ctx.fillStyle = 'orange'
 		ctx.beginPath()
-		ctx.arc(ship.x, ship.y, ship.r * 1.2, 0, Math.PI * 2, false)
+		ctx.arc(ship.x, ship.y, ship.r * 1.1, 0, Math.PI * 2, false)
 		ctx.fill()
 
 		ctx.fillStyle = 'yellow'
 		ctx.beginPath()
-		ctx.arc(ship.x, ship.y, ship.r * 0.9, 0, Math.PI * 2, false)
+		ctx.arc(ship.x, ship.y, ship.r * 0.8, 0, Math.PI * 2, false)
 		ctx.fill()
 
 		ctx.fillStyle = 'white'
 		ctx.beginPath()
-		ctx.arc(ship.x, ship.y, ship.r * 0.6, 0, Math.PI * 2, false)
+		ctx.arc(ship.x, ship.y, ship.r * 0.5, 0, Math.PI * 2, false)
 		ctx.fill()
 	}
 
@@ -256,21 +265,31 @@ function update() {
 	})
 
 	// Check for collisions
-	asteroidsArray.map((asteroid) => {
-		if (
-			distanceBetweenTwoPoints(ship.x, ship.y, asteroid.x, asteroid.y) <
-			ship.r + asteroid.radius
-		) {
-			makeShipExplode()
+	if (!isShipExploding) {
+		asteroidsArray.map((asteroid) => {
+			if (
+				distanceBetweenTwoPoints(ship.x, ship.y, asteroid.x, asteroid.y) <
+				ship.r + asteroid.radius
+			) {
+				makeShipExplode()
+			}
+		})
+
+		// Rotate the ship
+		ship.a += ship.rot
+
+		// Move the ship
+		ship.x += ship.thrust.x
+		ship.y += ship.thrust.y
+	} else {
+		ship.explosionTime--
+
+		if (ship.explosionTime == 0) {
+			// Modify ship properties instead of reassigning the entire object
+			// to avoid type error
+			Object.assign(ship, newShip())
 		}
-	})
-
-	// Rotate the ship
-	ship.a += ship.rot
-
-	// Move the ship
-	ship.x += ship.thrust.x
-	ship.y += ship.thrust.y
+	}
 
 	// Handle going over the edges
 	if (ship.x < 0 - ship.r) {
