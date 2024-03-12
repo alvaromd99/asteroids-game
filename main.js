@@ -10,8 +10,8 @@ import {
 	FRICTION,
 	LINE_WIDTH,
 	ROTATION_SPEED,
-	SHIP_EXPLOSION_DURATION,
 	SHIP_HEIGHT,
+	SHIP_INFO,
 	SHIP_THRUST,
 	SHOW_BOUNDING,
 	SHOW_CENTER_DOT,
@@ -75,6 +75,7 @@ function createNewAsteroid(x, y) {
 		vert: Math.floor(Math.random() * (ASTEROIDS_VERT + 1) + ASTEROIDS_VERT / 2),
 		vertOffs: [],
 	}
+
 	// Create the vertices offset array
 	for (let i = 0; i < newAsteroid.vert; i++) {
 		newAsteroid.vertOffs.push(
@@ -115,15 +116,19 @@ function handleKeyUp(/** @type {KeyboardEvent} */ e) {
 }
 
 function makeShipExplode() {
-	ship.explosionTime = Math.ceil(SHIP_EXPLOSION_DURATION * FRAME_RATE)
+	ship.explosionTime = Math.ceil(SHIP_INFO.explosionDuration * FRAME_RATE)
 }
 
 function newShip() {
-	return {
+	const newShip = {
 		x: canvas.width / 2, // X position
 		y: canvas.height / 2, // Y position
 		r: SHIP_HEIGHT * PIXEL_RATIO, // Adjusted for pixel ratio
 		a: (90 / 180) * Math.PI, // Angle
+		blinkNum: Math.ceil(
+			SHIP_INFO.respawnInvulnerabilityDuration / SHIP_INFO.blinkingDuration
+		),
+		blinkTime: Math.ceil(SHIP_INFO.blinkingDuration * FRAME_RATE),
 		explosionTime: 0,
 		rot: 0,
 		isThrusting: false,
@@ -132,12 +137,15 @@ function newShip() {
 			y: 0,
 		},
 	}
+
+	return newShip
 }
 
 function update() {
 	window.requestAnimationFrame(update)
 
 	const isShipExploding = ship.explosionTime > 0
+	const isBlinkOn = ship.blinkNum % 2 === 0
 
 	// Draw bg (this should be at the Top)
 	ctx.fillStyle = COLORS.canvasColor
@@ -177,28 +185,41 @@ function update() {
 	}
 
 	if (!isShipExploding) {
-		// Draw ship
-		ctx.strokeStyle = COLORS.shipColor
-		ctx.lineWidth = adjustedLineWidth // Adjusted for pixel ratio
+		if (isBlinkOn) {
+			// Draw ship
+			ctx.strokeStyle = COLORS.shipColor
+			ctx.lineWidth = adjustedLineWidth // Adjusted for pixel ratio
 
-		ctx.beginPath()
-		ctx.moveTo(
-			// Top point
-			ship.x + (4 / 3) * ship.r * Math.cos(ship.a),
-			ship.y - (4 / 3) * ship.r * Math.sin(ship.a)
-		)
-		ctx.lineTo(
-			// Rear left
-			ship.x - ship.r * ((2 / 3) * Math.cos(ship.a) + Math.sin(ship.a)),
-			ship.y + ship.r * ((2 / 3) * Math.sin(ship.a) - Math.cos(ship.a))
-		)
-		ctx.lineTo(
-			// Rear right
-			ship.x - ship.r * ((2 / 3) * Math.cos(ship.a) - Math.sin(ship.a)),
-			ship.y + ship.r * ((2 / 3) * Math.sin(ship.a) + Math.cos(ship.a))
-		)
-		ctx.closePath()
-		ctx.stroke()
+			ctx.beginPath()
+			ctx.moveTo(
+				// Top point
+				ship.x + (4 / 3) * ship.r * Math.cos(ship.a),
+				ship.y - (4 / 3) * ship.r * Math.sin(ship.a)
+			)
+			ctx.lineTo(
+				// Rear left
+				ship.x - ship.r * ((2 / 3) * Math.cos(ship.a) + Math.sin(ship.a)),
+				ship.y + ship.r * ((2 / 3) * Math.sin(ship.a) - Math.cos(ship.a))
+			)
+			ctx.lineTo(
+				// Rear right
+				ship.x - ship.r * ((2 / 3) * Math.cos(ship.a) - Math.sin(ship.a)),
+				ship.y + ship.r * ((2 / 3) * Math.sin(ship.a) + Math.cos(ship.a))
+			)
+			ctx.closePath()
+			ctx.stroke()
+		}
+		// HandleBlinking
+		if (ship.blinkNum > 0) {
+			// Reduce the blinking time
+			ship.blinkTime--
+
+			// Reduce the blink num
+			if (ship.blinkTime === 0) {
+				ship.blinkTime = Math.ceil(SHIP_INFO.blinkingDuration * FRAME_RATE)
+				ship.blinkNum--
+			}
+		}
 	} else {
 		// Draw the explosion
 		ctx.fillStyle = 'darkred'
