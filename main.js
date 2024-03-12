@@ -8,6 +8,7 @@ import {
 	COLORS,
 	FRAME_RATE,
 	FRICTION,
+	LASER_INFO,
 	LINE_WIDTH,
 	ROTATION_SPEED,
 	SHIP_HEIGHT,
@@ -88,6 +89,9 @@ function createNewAsteroid(x, y) {
 
 function handleKeyDown(/** @type {KeyboardEvent} */ e) {
 	switch (e.code) {
+		case 'Space':
+			shootLaser()
+			break
 		case 'ArrowLeft':
 			ship.rot = (ROTATION_SPEED / FRAME_RATE) * (Math.PI / 180)
 			break
@@ -102,6 +106,9 @@ function handleKeyDown(/** @type {KeyboardEvent} */ e) {
 
 function handleKeyUp(/** @type {KeyboardEvent} */ e) {
 	switch (e.code) {
+		case 'Space':
+			ship.canShoot = true
+			break
 		case 'ArrowLeft':
 			ship.rot = 0
 			break
@@ -125,12 +132,14 @@ function newShip() {
 		y: canvas.height / 2, // Y position
 		r: SHIP_HEIGHT * PIXEL_RATIO, // Adjusted for pixel ratio
 		a: (90 / 180) * Math.PI, // Angle
+		rot: 0,
 		blinkNum: Math.ceil(
 			SHIP_INFO.respawnInvulnerabilityDuration / SHIP_INFO.blinkingDuration
 		),
 		blinkTime: Math.ceil(SHIP_INFO.blinkingDuration * FRAME_RATE),
 		explosionTime: 0,
-		rot: 0,
+		canShoot: true,
+		lasers: [],
 		isThrusting: false,
 		thrust: {
 			x: 0,
@@ -139,6 +148,21 @@ function newShip() {
 	}
 
 	return newShip
+}
+
+function shootLaser() {
+	// Create laser object
+	if (ship.canShoot && ship.lasers.length < LASER_INFO.maxNumber) {
+		// Shoot lase from the nose of the ship
+		ship.lasers.push({
+			x: ship.x + (4 / 3) * ship.r * Math.cos(ship.a),
+			y: ship.y - (4 / 3) * ship.r * Math.sin(ship.a),
+			xSpeed: (LASER_INFO.speed * Math.cos(ship.a)) / FRAME_RATE,
+			ySpeed: (LASER_INFO.speed * Math.sin(ship.a)) / FRAME_RATE,
+		})
+	}
+	// Prevent spam shooting
+	ship.canShoot = false
 }
 
 function update() {
@@ -183,6 +207,14 @@ function update() {
 		ship.thrust.x -= (FRICTION * ship.thrust.x) / FRAME_RATE
 		ship.thrust.y -= (FRICTION * ship.thrust.y) / FRAME_RATE
 	}
+
+	// Draw the lasers
+	ship.lasers.map((laser) => {
+		ctx.fillStyle = 'salmon'
+		ctx.beginPath()
+		ctx.arc(laser.x, laser.y, SHIP_HEIGHT / 5, 0, Math.PI * 2, false)
+		ctx.fill()
+	})
 
 	if (!isShipExploding) {
 		if (isBlinkOn) {
@@ -276,6 +308,7 @@ function update() {
 		ctx.closePath()
 		ctx.stroke()
 
+		// Show impact circle
 		if (SHOW_BOUNDING) {
 			ctx.strokeStyle = COLORS.impactCircleColor
 
@@ -287,14 +320,16 @@ function update() {
 
 	// Check for collisions
 	if (!isShipExploding) {
-		asteroidsArray.map((asteroid) => {
-			if (
-				distanceBetweenTwoPoints(ship.x, ship.y, asteroid.x, asteroid.y) <
-				ship.r + asteroid.radius
-			) {
-				makeShipExplode()
-			}
-		})
+		if (ship.blinkNum === 0) {
+			asteroidsArray.map((asteroid) => {
+				if (
+					distanceBetweenTwoPoints(ship.x, ship.y, asteroid.x, asteroid.y) <
+					ship.r + asteroid.radius
+				) {
+					makeShipExplode()
+				}
+			})
+		}
 
 		// Rotate the ship
 		ship.a += ship.rot

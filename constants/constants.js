@@ -8,15 +8,21 @@ export const SHIP_HEIGHT = 15
 export const ROTATION_SPEED = 360 // Ship rotation speed in degrees per second
 export const SHIP_THRUST = 5 // Acceleration of the ship in pixels per second per second
 export const FRICTION = 0.4 // 0 = no friction
+
 export const SHIP_INFO = {
 	explosionDuration: 0.3, // In seconds
 	respawnInvulnerabilityDuration: 1,
 	blinkingDuration: 0.1,
 }
+export const LASER_INFO = {
+	maxNumber: 10, // Max numbers of lasers on screen at once
+	speed: 500, // in px per second
+}
 
 export const ASTEROIDS_NUM = 3 // Starting number of asteroids
 export const ASTEROIDS_VERT = 10 // Average number of vertices on the asteroids
 export const ASTEROIDS_JAG = 0.3 // To modify the vert so its not a perfect polygon, range [0, 1]
+
 export const ASTEROID_INFO = {
 	speed: 50, // Max starting speed
 	size: 100, // Starting size of asteroids in px
