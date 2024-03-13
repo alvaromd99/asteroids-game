@@ -83,7 +83,6 @@ function createNewAsteroid(x, y) {
 			Math.random() * ASTEROIDS_JAG * 2 + 1 - ASTEROIDS_JAG
 		)
 	}
-
 	return newAsteroid
 }
 
@@ -117,7 +116,6 @@ function handleKeyUp(/** @type {KeyboardEvent} */ e) {
 			break
 		case 'ArrowUp':
 			ship.isThrusting = false
-
 			break
 	}
 }
@@ -146,7 +144,6 @@ function newShip() {
 			y: 0,
 		},
 	}
-
 	return newShip
 }
 
@@ -158,7 +155,7 @@ function shootLaser() {
 			x: ship.x + (4 / 3) * ship.r * Math.cos(ship.a),
 			y: ship.y - (4 / 3) * ship.r * Math.sin(ship.a),
 			xSpeed: (LASER_INFO.speed * Math.cos(ship.a)) / FRAME_RATE,
-			ySpeed: (LASER_INFO.speed * Math.sin(ship.a)) / FRAME_RATE,
+			ySpeed: -(LASER_INFO.speed * Math.sin(ship.a)) / FRAME_RATE,
 		})
 	}
 	// Prevent spam shooting
@@ -358,6 +355,36 @@ function update() {
 		ship.y = canvas.height + ship.r
 	} else if (ship.y > canvas.height + ship.r) {
 		ship.y = 0 - ship.r
+	}
+
+	console.log(ship.lasers)
+	// Move the lasers
+	for (let i = ship.lasers.length - 1; i >= 0; i--) {
+		// If the lasers go over edges, delete them
+		if (ship.lasers[i].x < 0 || ship.lasers[i].x > canvas.width) {
+			ship.lasers.splice(i, 1)
+			continue
+		}
+		if (ship.lasers[i].y < 0 || ship.lasers[i].y > canvas.height) {
+			ship.lasers.splice(i, 1)
+			continue
+		}
+
+		ship.lasers[i].x += ship.lasers[i].xSpeed
+		ship.lasers[i].y += ship.lasers[i].ySpeed
+
+		// Handle lasers going over the edges
+		/* if (ship.lasers[i].x < 0) {
+			ship.lasers[i].x = canvas.width
+		} else if (ship.lasers[i].x > canvas.width) {
+			ship.lasers[i].x = 0
+		}
+
+		if (ship.lasers[i].y < 0) {
+			ship.lasers[i].y = canvas.height
+		} else if (ship.lasers[i].y > canvas.height) {
+			ship.lasers[i].y = 0
+		} */
 	}
 
 	// Move the asteroids
