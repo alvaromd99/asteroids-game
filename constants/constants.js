@@ -17,6 +17,7 @@ export const SHIP_INFO = {
 export const LASER_INFO = {
 	maxNumber: 1000, // Max numbers of lasers on screen at once
 	speed: 500, // in px per second
+	explodeDuration: 0.1, // seconds
 }
 
 export const ASTEROIDS_NUM = 3 // Starting number of asteroids
