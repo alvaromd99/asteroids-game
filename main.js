@@ -213,6 +213,28 @@ function update() {
 		ctx.fill()
 	})
 
+	// Detect if lasers hit an asteroid
+	for (let i = asteroidsArray.length - 1; i >= 0; i--) {
+		const astX = asteroidsArray[i].x
+		const astY = asteroidsArray[i].y
+		const astR = asteroidsArray[i].radius
+
+		for (let j = ship.lasers.length - 1; j >= 0; j--) {
+			const lasX = ship.lasers[j].x
+			const lasY = ship.lasers[j].y
+
+			// Detect hits
+			if (distanceBetweenTwoPoints(astX, astY, lasX, lasY) < astR) {
+				// Remove laser
+				ship.lasers.splice(j, 1)
+				// Remove asteroid
+				asteroidsArray.splice(i, 1)
+
+				break
+			}
+		}
+	}
+
 	if (!isShipExploding) {
 		if (isBlinkOn) {
 			// Draw ship
@@ -357,7 +379,6 @@ function update() {
 		ship.y = 0 - ship.r
 	}
 
-	console.log(ship.lasers)
 	// Move the lasers
 	for (let i = ship.lasers.length - 1; i >= 0; i--) {
 		// If the lasers go over edges, delete them
