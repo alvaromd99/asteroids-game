@@ -32,11 +32,18 @@ canvas.style.height = `${CANVAS_HEIGHT}px`
 
 const adjustedLineWidth = LINE_WIDTH * PIXEL_RATIO
 
-const ship = newShip()
+// Game parameters
+let level
+
+// Ship creation
+const ship = {}
 
 // Asteroids creation
 let asteroidsArray = []
 createAllAsteroids()
+
+// Create new Game
+newGame()
 
 // Event handlers
 document.addEventListener('keydown', handleKeyDown)
@@ -153,6 +160,15 @@ function handleKeyUp(/** @type {KeyboardEvent} */ e) {
 
 function makeShipExplode() {
 	ship.explosionTime = Math.ceil(SHIP_INFO.explosionDuration * FRAME_RATE)
+}
+
+function newGame() {
+	Object.assign(ship, newShip())
+	newLevel()
+}
+
+function newLevel() {
+	createAllAsteroids()
 }
 
 function newShip() {
