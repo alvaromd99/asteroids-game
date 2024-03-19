@@ -45,6 +45,7 @@ import {
  * @property {Object} thrust - The thrust vector of the ship.
  * @property {number} thrust.x - The x-component of the thrust vector.
  * @property {number} thrust.y - The y-component of the thrust vector.
+ * @property {boolean} isDead - The ship has no more lives
  */
 
 /**
@@ -150,6 +151,31 @@ function distanceBetweenTwoPoints(x1, y1, x2, y2) {
 	return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
 }
 
+function drawShip(x, y, a) {
+	// Draw ship
+	ctx.strokeStyle = COLORS.shipColor
+	ctx.lineWidth = adjustedLineWidth // Adjusted for pixel ratio
+
+	ctx.beginPath()
+	ctx.moveTo(
+		// Top point
+		x + (4 / 3) * ship.r * Math.cos(a),
+		y - (4 / 3) * ship.r * Math.sin(a)
+	)
+	ctx.lineTo(
+		// Rear left
+		x - ship.r * ((2 / 3) * Math.cos(a) + Math.sin(a)),
+		y + ship.r * ((2 / 3) * Math.sin(a) - Math.cos(a))
+	)
+	ctx.lineTo(
+		// Rear right
+		x - ship.r * ((2 / 3) * Math.cos(a) - Math.sin(a)),
+		y + ship.r * ((2 / 3) * Math.sin(a) + Math.cos(a))
+	)
+	ctx.closePath()
+	ctx.stroke()
+}
+
 function createNewAsteroid(x, y, radius) {
 	const lvlMulti = 1 + 0.1 * level
 	const newAsteroid = {
@@ -177,6 +203,9 @@ function createNewAsteroid(x, y, radius) {
 }
 
 function handleKeyDown(/** @type {KeyboardEvent} */ e) {
+	// Avoid doing anything if ship is dead
+	if (ship.isDead) return
+
 	switch (e.code) {
 		case 'Space':
 			shootLaser()
@@ -194,6 +223,9 @@ function handleKeyDown(/** @type {KeyboardEvent} */ e) {
 }
 
 function handleKeyUp(/** @type {KeyboardEvent} */ e) {
+	// Avoid doing anything if ship is dead
+	if (ship.isDead) return
+
 	switch (e.code) {
 		case 'Space':
 			ship.canShoot = true
@@ -218,6 +250,8 @@ function newGame() {
 	level = 0
 	lives = GAME_LIVES
 	Object.assign(ship, newShip())
+	// Reset asteroids array
+	asteroidsArray.length = 0
 	newLevel()
 }
 
@@ -246,6 +280,7 @@ function newShip() {
 			x: 0,
 			y: 0,
 		},
+		isDead: false,
 	}
 	return newShip
 }
@@ -266,6 +301,12 @@ function shootLaser() {
 	ship.canShoot = false
 }
 
+function gameOver() {
+	ship.isDead = true
+	text = 'Game Over'
+	textAlpha = 1.0
+}
+
 function update() {
 	window.requestAnimationFrame(update)
 
@@ -277,7 +318,7 @@ function update() {
 	ctx.fillRect(0, 0, canvas.width, canvas.height)
 
 	// Thrust the ship
-	if (ship.isThrusting && !isShipExploding) {
+	if (ship.isThrusting && !isShipExploding && !ship.isDead) {
 		ship.thrust.x += (SHIP_THRUST * Math.cos(ship.a)) / FRAME_RATE
 		ship.thrust.y -= (SHIP_THRUST * Math.sin(ship.a)) / FRAME_RATE
 
@@ -348,30 +389,10 @@ function update() {
 		}
 	})
 
+	// Handle ship drawing
 	if (!isShipExploding) {
-		if (isBlinkOn) {
-			// Draw ship
-			ctx.strokeStyle = COLORS.shipColor
-			ctx.lineWidth = adjustedLineWidth // Adjusted for pixel ratio
-
-			ctx.beginPath()
-			ctx.moveTo(
-				// Top point
-				ship.x + (4 / 3) * ship.r * Math.cos(ship.a),
-				ship.y - (4 / 3) * ship.r * Math.sin(ship.a)
-			)
-			ctx.lineTo(
-				// Rear left
-				ship.x - ship.r * ((2 / 3) * Math.cos(ship.a) + Math.sin(ship.a)),
-				ship.y + ship.r * ((2 / 3) * Math.sin(ship.a) - Math.cos(ship.a))
-			)
-			ctx.lineTo(
-				// Rear right
-				ship.x - ship.r * ((2 / 3) * Math.cos(ship.a) - Math.sin(ship.a)),
-				ship.y + ship.r * ((2 / 3) * Math.sin(ship.a) + Math.cos(ship.a))
-			)
-			ctx.closePath()
-			ctx.stroke()
+		if (isBlinkOn && !ship.isDead) {
+			drawShip(ship.x, ship.y, ship.a)
 		}
 		// HandleBlinking
 		if (ship.blinkNum > 0) {
@@ -412,16 +433,6 @@ function update() {
 		ctx.fill()
 	}
 
-	// Draw the level text
-	if (textAlpha >= 0) {
-		ctx.textAlign = 'center'
-		ctx.textBaseline = 'middle'
-		ctx.fillStyle = `rgba(255, 255, 255, ${textAlpha})`
-		ctx.font = `small-caps ${TEXT_INFO.textSize}px system-ui`
-		ctx.fillText(text, canvas.width / 2, canvas.height * 0.75)
-		textAlpha -= 1.0 / TEXT_INFO.textFadeTime / FRAME_RATE
-	}
-
 	// Draw the asteroids
 	asteroidsArray.forEach(({ x, y, radius, a, vert, vertOffs }) => {
 		ctx.strokeStyle = COLORS.asteroidColor
@@ -452,8 +463,29 @@ function update() {
 		}
 	})
 
+	// Draw the level text
+	if (textAlpha >= 0) {
+		ctx.textAlign = 'center'
+		ctx.textBaseline = 'middle'
+		ctx.fillStyle = `rgba(255, 255, 255, ${textAlpha})`
+		ctx.font = `small-caps ${TEXT_INFO.textSize}px system-ui`
+		ctx.fillText(text, canvas.width / 2, canvas.height * 0.75)
+		textAlpha -= 1.0 / TEXT_INFO.textFadeTime / FRAME_RATE
+	} else if (ship.isDead) {
+		newGame()
+	}
+
+	// Draw the lives
+	for (let i = 0; i < lives; i++) {
+		drawShip(
+			SHIP_HEIGHT * 1.5 + i * SHIP_HEIGHT * 2.5,
+			SHIP_HEIGHT * 2,
+			0.5 * Math.PI
+		)
+	}
+
 	// Check for collisions
-	if (!isShipExploding) {
+	if (!isShipExploding && !ship.isDead) {
 		if (ship.blinkNum === 0) {
 			asteroidsArray.map((asteroid, asteroidIndex) => {
 				if (
@@ -466,7 +498,6 @@ function update() {
 				}
 			})
 		}
-
 		// Rotate the ship
 		ship.a += ship.rot
 
@@ -477,9 +508,14 @@ function update() {
 		ship.explosionTime--
 
 		if (ship.explosionTime == 0) {
-			// Modify ship properties instead of reassigning the entire object
-			// to avoid type error
-			Object.assign(ship, newShip())
+			lives--
+			if (lives === 0) {
+				gameOver()
+			} else {
+				// Modify ship properties instead of reassigning the entire object
+				// to avoid type error
+				Object.assign(ship, newShip())
+			}
 		}
 	}
 
