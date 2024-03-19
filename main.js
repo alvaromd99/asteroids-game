@@ -18,6 +18,45 @@ import {
 	SHOW_CENTER_DOT,
 } from './constants/constants.js'
 
+/**
+ * @typedef {Object} Laser
+ * @property {number} x - The x-coordinate of the laser.
+ * @property {number} y - The y-coordinate of the laser.
+ * @property {number} xSpeed - The speed of the laser along the x-axis.
+ * @property {number} ySpeed - The speed of the laser along the y-axis.
+ * @property {number} explodeTime - Time of the explosion when hit an asteroid
+ */
+
+/**
+ * @typedef {Object} Ship
+ * @property {number} x - The x-coordinate of the ship.
+ * @property {number} y - The y-coordinate of the ship.
+ * @property {number} r - The radius of the ship.
+ * @property {number} a - The angle of the ship.
+ * @property {number} rot - The rotation speed of the ship.
+ * @property {number} blinkNum - The number of blinks.
+ * @property {number} blinkTime - The duration of each blink.
+ * @property {number} explosionTime - The duration of the explosion.
+ * @property {boolean} canShoot - Indicates if the ship can shoot.
+ * @property {Laser[]} lasers - An array containing information about the ship's lasers.
+ * @property {boolean} isThrusting - Indicates if the ship is thrusting.
+ * @property {Object} thrust - The thrust vector of the ship.
+ * @property {number} thrust.x - The x-component of the thrust vector.
+ * @property {number} thrust.y - The y-component of the thrust vector.
+ */
+
+/**
+ * @typedef {Object} Asteroid
+ * @property {number} x - The x-coordinate of the asteroid.
+ * @property {number} y - The y-coordinate of the asteroid.
+ * @property {number} xSpeed - The speed of the asteroid along the x-axis.
+ * @property {number} ySpeed - The speed of the asteroid along the y-axis.
+ * @property {number} radius - The radius of the asteroid.
+ * @property {number} a - The angle of the asteroid.
+ * @property {number} vert - The number of vertices of the asteroid.
+ * @property {number[]} vertOffs - The offset of each vertex of the asteroid.
+ */
+
 const canvas = document.querySelector('canvas')
 const ctx = canvas.getContext('2d')
 
@@ -33,11 +72,17 @@ canvas.style.height = `${CANVAS_HEIGHT}px`
 const adjustedLineWidth = LINE_WIDTH * PIXEL_RATIO
 
 // Game parameters
-let level
+let level = 0
 
+/**
+ * @type {Ship}
+ */
 // Ship creation
 const ship = {}
 
+/**
+ * @type {Asteroid[]}
+ */
 // Asteroids creation
 const asteroidsArray = []
 
@@ -290,28 +335,6 @@ function update() {
 		}
 	})
 
-	// Detect if lasers hit an asteroid
-	/* for (let i = asteroidsArray.length - 1; i >= 0; i--) {
-		const astX = asteroidsArray[i].x
-		const astY = asteroidsArray[i].y
-		const astR = asteroidsArray[i].radius
-
-		for (let j = ship.lasers.length - 1; j >= 0; j--) {
-			const lasX = ship.lasers[j].x
-			const lasY = ship.lasers[j].y
-
-			// Detect hits
-			if (distanceBetweenTwoPoints(astX, astY, lasX, lasY) < astR) {
-				// Remove laser
-				ship.lasers.splice(j, 1)
-				// Remove asteroid
-				asteroidsArray.splice(i, 1)
-
-				break
-			}
-		}
-	} */
-
 	if (!isShipExploding) {
 		if (isBlinkOn) {
 			// Draw ship
@@ -482,21 +505,12 @@ function update() {
 			ship.lasers.splice(i, 1)
 			continue
 		}
-
-		// Handle lasers going over the edges
-		/* if (ship.lasers[i].x < 0) {
-			ship.lasers[i].x = canvas.width
-		} else if (ship.lasers[i].x > canvas.width) {
-			ship.lasers[i].x = 0
-		}
-
-		if (ship.lasers[i].y < 0) {
-			ship.lasers[i].y = canvas.height
-		} else if (ship.lasers[i].y > canvas.height) {
-			ship.lasers[i].y = 0
-		} */
 	}
 
+	/**
+	 * Update the position of asteroids based on their speed.
+	 * @param {Asteroid} - An array of asteroids to update.
+	 */
 	// Move all the asteroids
 	asteroidsArray.forEach((asteroid) => {
 		let newX = asteroid.x + asteroid.xSpeed
