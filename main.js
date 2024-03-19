@@ -39,8 +39,7 @@ let level
 const ship = {}
 
 // Asteroids creation
-let asteroidsArray = []
-createAllAsteroids()
+const asteroidsArray = []
 
 // Create new Game
 newGame()
@@ -50,7 +49,6 @@ document.addEventListener('keydown', handleKeyDown)
 document.addEventListener('keyup', handleKeyUp)
 
 function createAllAsteroids() {
-	asteroidsArray = []
 	let xAsteroidPos, yAsteroidPos
 	for (let i = 0; i < ASTEROIDS_NUM; i++) {
 		do {
@@ -499,29 +497,28 @@ function update() {
 		} */
 	}
 
-	// Move the asteroids
-	asteroidsArray = asteroidsArray.map(
-		({ x, y, radius, a, vert, vertOffs, xSpeed, ySpeed }) => {
-			x += xSpeed
-			y += ySpeed
+	// Move all the asteroids
+	asteroidsArray.forEach((asteroid) => {
+		let newX = asteroid.x + asteroid.xSpeed
+		let newY = asteroid.y + asteroid.ySpeed
 
-			// Handle asteroid going over the edges
-			if (x < 0 - radius) {
-				x = canvas.width + radius
-			} else if (x > canvas.width + radius) {
-				x = 0 - radius
-			}
-
-			if (y < 0 - radius) {
-				y = canvas.height + radius
-			} else if (y > canvas.height + radius) {
-				y = 0 - radius
-			}
-
-			// Return the updated asteroid
-			return { x, y, radius, a, vert, vertOffs, xSpeed, ySpeed }
+		// Handle asteroid going over the edges
+		if (newX < 0 - asteroid.radius) {
+			newX = canvas.width + asteroid.radius
+		} else if (newX > canvas.width + asteroid.radius) {
+			newX = 0 - asteroid.radius
 		}
-	)
+
+		if (newY < 0 - asteroid.radius) {
+			newY = canvas.height + asteroid.radius
+		} else if (newY > canvas.height + asteroid.radius) {
+			newY = 0 - asteroid.radius
+		}
+
+		// Update the asteroid properties directly
+		asteroid.x = newX
+		asteroid.y = newY
+	})
 
 	// centre dot
 	if (SHOW_CENTER_DOT) {
