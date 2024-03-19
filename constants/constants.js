@@ -16,7 +16,7 @@ export const SHIP_INFO = {
 }
 export const LASER_INFO = {
 	maxNumber: 1000, // Max numbers of lasers on screen at once
-	speed: 500, // in px per second
+	speed: 700, // in px per second
 	explodeDuration: 0.1, // seconds
 }
 
@@ -40,3 +40,10 @@ export const COLORS = {
 	asteroidColor: 'gray',
 	impactCircleColor: 'lime',
 }
+
+export const TEXT_INFO = {
+	textFadeTime: 1.5, // in seconds
+	textSize: 70, // in px
+}
+
+export const GAME_LIVES = 3

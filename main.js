@@ -8,6 +8,7 @@ import {
 	COLORS,
 	FRAME_RATE,
 	FRICTION,
+	GAME_LIVES,
 	LASER_INFO,
 	LINE_WIDTH,
 	ROTATION_SPEED,
@@ -16,6 +17,7 @@ import {
 	SHIP_THRUST,
 	SHOW_BOUNDING,
 	SHOW_CENTER_DOT,
+	TEXT_INFO,
 } from './constants/constants.js'
 
 /**
@@ -72,7 +74,7 @@ canvas.style.height = `${CANVAS_HEIGHT}px`
 const adjustedLineWidth = LINE_WIDTH * PIXEL_RATIO
 
 // Game parameters
-let level = 0
+let level, text, textAlpha, lives
 
 /**
  * @type {Ship}
@@ -95,7 +97,7 @@ document.addEventListener('keyup', handleKeyUp)
 
 function createAllAsteroids() {
 	let xAsteroidPos, yAsteroidPos
-	for (let i = 0; i < ASTEROIDS_NUM; i++) {
+	for (let i = 0; i < ASTEROIDS_NUM + level; i++) {
 		do {
 			xAsteroidPos = Math.floor(Math.random() * CANVAS_WIDTH)
 			yAsteroidPos = Math.floor(Math.random() * CANVAS_HEIGHT)
@@ -136,6 +138,12 @@ function destroyAsteroid(index) {
 	}
 	// Destroy the original asteroid
 	asteroidsArray.splice(index, 1)
+
+	// Check if no more asteroids to create a new level
+	if (asteroidsArray.length === 0) {
+		level++
+		newLevel()
+	}
 }
 
 function distanceBetweenTwoPoints(x1, y1, x2, y2) {
@@ -143,14 +151,15 @@ function distanceBetweenTwoPoints(x1, y1, x2, y2) {
 }
 
 function createNewAsteroid(x, y, radius) {
+	const lvlMulti = 1 + 0.1 * level
 	const newAsteroid = {
 		x: x,
 		y: y,
 		xSpeed:
-			((Math.random() * ASTEROID_INFO.speed) / FRAME_RATE) *
+			((Math.random() * ASTEROID_INFO.speed * lvlMulti) / FRAME_RATE) *
 			(Math.random() < 0.5 ? 1 : -1),
 		ySpeed:
-			((Math.random() * ASTEROID_INFO.speed) / FRAME_RATE) *
+			((Math.random() * ASTEROID_INFO.speed * lvlMulti) / FRAME_RATE) *
 			(Math.random() < 0.5 ? 1 : -1),
 		radius: radius * PIXEL_RATIO,
 		a: Math.random() * Math.PI * 2, // In radians
@@ -206,11 +215,15 @@ function makeShipExplode() {
 }
 
 function newGame() {
+	level = 0
+	lives = GAME_LIVES
 	Object.assign(ship, newShip())
 	newLevel()
 }
 
 function newLevel() {
+	text = 'Level ' + (level + 1)
+	textAlpha = 1.0
 	createAllAsteroids()
 }
 
@@ -299,7 +312,7 @@ function update() {
 	// Draw the lasers
 	ship.lasers.map((laser) => {
 		if (laser.explodeTime === 0) {
-			ctx.fillStyle = 'cyan'
+			ctx.fillStyle = 'white'
 			ctx.beginPath()
 			ctx.arc(laser.x, laser.y, SHIP_HEIGHT / 5, 0, Math.PI * 2, false)
 			ctx.fill()
@@ -399,12 +412,14 @@ function update() {
 		ctx.fill()
 	}
 
-	if (SHOW_BOUNDING) {
-		ctx.strokeStyle = COLORS.impactCircleColor
-
-		ctx.beginPath()
-		ctx.arc(ship.x, ship.y, ship.r, 0, Math.PI * 2, false)
-		ctx.stroke()
+	// Draw the level text
+	if (textAlpha >= 0) {
+		ctx.textAlign = 'center'
+		ctx.textBaseline = 'middle'
+		ctx.fillStyle = `rgba(255, 255, 255, ${textAlpha})`
+		ctx.font = `small-caps ${TEXT_INFO.textSize}px system-ui`
+		ctx.fillText(text, canvas.width / 2, canvas.height * 0.75)
+		textAlpha -= 1.0 / TEXT_INFO.textFadeTime / FRAME_RATE
 	}
 
 	// Draw the asteroids
@@ -427,7 +442,7 @@ function update() {
 		ctx.closePath()
 		ctx.stroke()
 
-		// Show impact circle
+		// Show asteroids impact circle
 		if (SHOW_BOUNDING) {
 			ctx.strokeStyle = COLORS.impactCircleColor
 
@@ -534,7 +549,16 @@ function update() {
 		asteroid.y = newY
 	})
 
-	// centre dot
+	// Ship impact circle
+	if (SHOW_BOUNDING) {
+		ctx.strokeStyle = COLORS.impactCircleColor
+
+		ctx.beginPath()
+		ctx.arc(ship.x, ship.y, ship.r, 0, Math.PI * 2, false)
+		ctx.stroke()
+	}
+
+	// Centre dot
 	if (SHOW_CENTER_DOT) {
 		ctx.fillStyle = 'red'
 		ctx.fillRect(ship.x - 1, ship.y - 1, 2, 2)
