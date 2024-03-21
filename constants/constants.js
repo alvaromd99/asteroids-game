@@ -27,6 +27,9 @@ export const ASTEROIDS_JAG = 0.3 // To modify the vert so its not a perfect poly
 export const ASTEROID_INFO = {
 	speed: 50, // Max starting speed
 	size: 100, // Starting size of asteroids in px
+	pointsBig: 10, // Points for the big asteroids
+	pointsMedium: 30, // medium asteroids
+	pointsSmall: 50, // small asteroids
 }
 
 export const SHOW_BOUNDING = false
@@ -42,8 +45,16 @@ export const COLORS = {
 }
 
 export const TEXT_INFO = {
-	textFadeTime: 1.5, // in seconds
 	textSize: 70, // in px
+	textFadeTime: 1.5, // in seconds
+}
+
+export const NUMBER_INFO = {
+	textSize: 40, // in px
+	marginTop: 28,
 }
 
 export const GAME_LIVES = 3
+
+export const SAVE_KEY_LS = 'bestScore' // Key for the local storage
+export const DEFAULT_BS_VALUE = 100 // Default best score value, used when no local storage variable

@@ -6,12 +6,15 @@ import {
 	CANVAS_HEIGHT,
 	CANVAS_WIDTH,
 	COLORS,
+	DEFAULT_BS_VALUE,
 	FRAME_RATE,
 	FRICTION,
 	GAME_LIVES,
 	LASER_INFO,
 	LINE_WIDTH,
+	NUMBER_INFO,
 	ROTATION_SPEED,
+	SAVE_KEY_LS,
 	SHIP_HEIGHT,
 	SHIP_INFO,
 	SHIP_THRUST,
@@ -75,7 +78,7 @@ canvas.style.height = `${CANVAS_HEIGHT}px`
 const adjustedLineWidth = LINE_WIDTH * PIXEL_RATIO
 
 // Game parameters
-let level, text, textAlpha, lives
+let level, text, textAlpha, lives, score, bestScore
 
 /**
  * @type {Ship}
@@ -126,6 +129,7 @@ function destroyAsteroid(index) {
 		asteroidsArray.push(
 			createNewAsteroid(x, y, Math.ceil(ASTEROID_INFO.size / 4))
 		)
+		score += ASTEROID_INFO.pointsBig
 	} else if (radius === Math.ceil(ASTEROID_INFO.size / 4)) {
 		asteroidsArray.push(
 			createNewAsteroid(x, y, Math.ceil(ASTEROID_INFO.size / 8))
@@ -136,7 +140,17 @@ function destroyAsteroid(index) {
 		asteroidsArray.push(
 			createNewAsteroid(x, y, Math.ceil(ASTEROID_INFO.size / 8))
 		)
+		score += ASTEROID_INFO.pointsMedium
+	} else {
+		score += ASTEROID_INFO.pointsSmall
 	}
+
+	// Update the best score if needed
+	if (score > bestScore) {
+		bestScore = score
+		localStorage.setItem(SAVE_KEY_LS, bestScore)
+	}
+
 	// Destroy the original asteroid
 	asteroidsArray.splice(index, 1)
 
@@ -146,6 +160,7 @@ function destroyAsteroid(index) {
 		newLevel()
 	}
 }
+console.log(score)
 
 function distanceBetweenTwoPoints(x1, y1, x2, y2) {
 	return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
@@ -249,9 +264,18 @@ function makeShipExplode() {
 function newGame() {
 	level = 0
 	lives = GAME_LIVES
+	score = 0
+
+	// Initialize the ship
 	Object.assign(ship, newShip())
+
 	// Reset asteroids array
 	asteroidsArray.length = 0
+
+	// Handle local storage
+	let storedStr = localStorage.getItem(SAVE_KEY_LS)
+	bestScore = storedStr !== null ? parseInt(storedStr) : DEFAULT_BS_VALUE
+
 	newLevel()
 }
 
@@ -483,6 +507,20 @@ function update() {
 			0.5 * Math.PI
 		)
 	}
+
+	// Draw the score
+	ctx.textAlign = 'right'
+	ctx.textBaseline = 'middle'
+	ctx.fillStyle = 'white'
+	ctx.font = `${NUMBER_INFO.textSize}px system-ui`
+	ctx.fillText(score, canvas.width - SHIP_HEIGHT / 2, NUMBER_INFO.marginTop)
+
+	// Draw the high score
+	ctx.textAlign = 'center'
+	ctx.textBaseline = 'middle'
+	ctx.fillStyle = 'white'
+	ctx.font = `${NUMBER_INFO.textSize}px system-ui`
+	ctx.fillText(`Best ${bestScore}`, canvas.width / 2, NUMBER_INFO.marginTop)
 
 	// Check for collisions
 	if (!isShipExploding && !ship.isDead) {
