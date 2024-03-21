@@ -5,8 +5,8 @@ export const FRAME_RATE = 100
 export const LINE_WIDTH = 2 // Width of the ship draw
 
 export const SHIP_HEIGHT = 15
-export const ROTATION_SPEED = 360 // Ship rotation speed in degrees per second
-export const SHIP_THRUST = 3 // Acceleration of the ship in pixels per second per second
+export const ROTATION_SPEED = 450 // Ship rotation speed in degrees per second
+export const SHIP_THRUST = 5 // Acceleration of the ship in pixels per second per second
 export const FRICTION = 0.4 // 0 = no friction
 
 export const SHIP_INFO = {
@@ -58,3 +58,5 @@ export const GAME_LIVES = 3
 
 export const SAVE_KEY_LS = 'bestScore' // Key for the local storage
 export const DEFAULT_BS_VALUE = 100 // Default best score value, used when no local storage variable
+
+export const HAS_SOUND = true // Control sound effects on / off

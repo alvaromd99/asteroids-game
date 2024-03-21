@@ -10,6 +10,7 @@ import {
 	FRAME_RATE,
 	FRICTION,
 	GAME_LIVES,
+	HAS_SOUND,
 	LASER_INFO,
 	LINE_WIDTH,
 	NUMBER_INFO,
@@ -77,6 +78,16 @@ canvas.style.height = `${CANVAS_HEIGHT}px`
 
 const adjustedLineWidth = LINE_WIDTH * PIXEL_RATIO
 
+// Set up sounds sound effects
+const fxLaser = new Audio('/sounds/laser.m4a')
+const fxExplosion = new Audio('/sounds/explode.m4a')
+const fxHit = new Audio('/sounds/hit.m4a')
+const fxThrust = new Audio('/sounds/thrust.m4a')
+fxLaser.volume = 0.02
+fxExplosion.volume = 0.2
+fxHit.volume = 0.2
+fxThrust.volume = 0.4
+
 // Game parameters
 let level, text, textAlpha, lives, score, bestScore
 
@@ -98,6 +109,31 @@ newGame()
 // Event handlers
 document.addEventListener('keydown', handleKeyDown)
 document.addEventListener('keyup', handleKeyUp)
+
+/**
+ *
+ * @param {HTMLAudioElement} sound
+ * @param {boolean} hasMultiplePlays
+ */
+function playSound(sound, hasMultiplePlays) {
+	if (HAS_SOUND) {
+		if (hasMultiplePlays) {
+			sound.currentTime = 0
+		}
+		sound.play()
+	}
+}
+
+/**
+ *
+ * @param {HTMLAudioElement} sound
+ */
+function stopSound(sound) {
+	if (HAS_SOUND) {
+		sound.pause()
+		sound.currentTime = 0
+	}
+}
 
 function createAllAsteroids() {
 	let xAsteroidPos, yAsteroidPos
@@ -154,13 +190,15 @@ function destroyAsteroid(index) {
 	// Destroy the original asteroid
 	asteroidsArray.splice(index, 1)
 
+	// Sound Effect
+	playSound(fxHit, true)
+
 	// Check if no more asteroids to create a new level
 	if (asteroidsArray.length === 0) {
 		level++
 		newLevel()
 	}
 }
-console.log(score)
 
 function distanceBetweenTwoPoints(x1, y1, x2, y2) {
 	return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
@@ -259,6 +297,7 @@ function handleKeyUp(/** @type {KeyboardEvent} */ e) {
 
 function makeShipExplode() {
 	ship.explosionTime = Math.ceil(SHIP_INFO.explosionDuration * FRAME_RATE)
+	playSound(fxExplosion, false)
 }
 
 function newGame() {
@@ -320,6 +359,7 @@ function shootLaser() {
 			ySpeed: -(LASER_INFO.speed * Math.sin(ship.a)) / FRAME_RATE,
 			explodeTime: 0,
 		})
+		playSound(fxLaser, true)
 	}
 	// Prevent spam shooting
 	ship.canShoot = false
@@ -345,6 +385,9 @@ function update() {
 	if (ship.isThrusting && !isShipExploding && !ship.isDead) {
 		ship.thrust.x += (SHIP_THRUST * Math.cos(ship.a)) / FRAME_RATE
 		ship.thrust.y -= (SHIP_THRUST * Math.sin(ship.a)) / FRAME_RATE
+
+		// Sound effect
+		playSound(fxThrust, false)
 
 		// Draw flame
 		ctx.fillStyle = 'red'
@@ -372,6 +415,8 @@ function update() {
 	} else {
 		ship.thrust.x -= (FRICTION * ship.thrust.x) / FRAME_RATE
 		ship.thrust.y -= (FRICTION * ship.thrust.y) / FRAME_RATE
+
+		stopSound(fxThrust)
 	}
 
 	// Draw the lasers
