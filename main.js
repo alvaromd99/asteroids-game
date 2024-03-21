@@ -88,6 +88,11 @@ fxExplosion.volume = 0.2
 fxHit.volume = 0.2
 fxThrust.volume = 0.4
 
+// Set up the music
+const music = new Audio('/sounds/game.m4a')
+music.volume = 0.1
+music.play()
+
 // Game parameters
 let level, text, textAlpha, lives, score, bestScore
 
